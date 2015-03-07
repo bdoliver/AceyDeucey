@@ -8,7 +8,6 @@ use lib "$FindBin::Bin/../lib";
 
 use AceyDeucey;
 
-use Games::Cards;
 use IO::Capture::Stdout;
 use Test::Most;
 
