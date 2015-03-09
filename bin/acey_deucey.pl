@@ -11,33 +11,34 @@ use Pod::Usage;
 
 use AceyDeucey;
 
-binmode(STDOUT, ":utf8");
+binmode( STDOUT, ":encoding(UTF-8)" );
 
-
-my ($pot, $stake, $decks, $hints, $help, $man);
+my ( $pot, $stake, $decks, $hints, $help, $man );
 
 GetOptions(
-#    "hints"     => \$hints, # may use this to display odds with each hand
-    "stake=i"   => \$stake,
-    "pot=i"     => \$pot,
-    "decks=i"   => \$decks,
-    "help|?"    => \$help,
-    "man"       => \$man,
+    # "hints"  => \$hints, # may use this to display odds with each hand
+    "stake=i" => \$stake,
+    "pot=i"   => \$pot,
+    "decks=i" => \$decks,
+    "help|?"  => \$help,
+    "man"     => \$man,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
-pod2usage(-verbose => 2) if $man;
+pod2usage( -verbose => 2 ) if $man;
 
-if ( $stake ) {
+if ($stake) {
     $pot or die "--pot is required with --stake\n";
 }
 
-AceyDeucey->new(pot => $pot, stake => $stake, decks => $decks)->play();
+AceyDeucey->new( pot => $pot, stake => $stake, decks => $decks )->play();
 
 __END__
 =head1 NAME
 
 acey_deucey.pl - Play a game of "Acey / Deucey"
+
+[Note: this game expects your terminal to be capable of rendering UTF8]
 
 =head2 OPTIONS
 
