@@ -24,15 +24,17 @@ has quit => (
 #     isa => 'Bool',
     default => 0,
 );
-# has game_count => (
-#     traits => ['Counter'],
-#     is => 'ro',
-#     isa => 'Num',
-#     default => 1,
-#     dec_game_count => 'dec',
-#     inc_game_count => 'inc', # not used, just defined for completeness...
-#     reset_game_count => 'reset',
-# );
+has num_decks => (
+    traits => ['Counter'],
+    is => 'rw',
+    isa => 'Num',
+    default => 1,
+    handles => {
+        dec_num_decks => 'dec',
+        inc_num_decks => 'inc',     # ) not used, just defined for completeness
+        reset_num_decks => 'reset', # )   "  "
+    },
+);
 has deck => (
     is => 'rw',
     isa => 'Games::Cards::Deck',
@@ -105,10 +107,9 @@ sub _init_stats {
 sub _init_attrs {
     my ( $self, $what ) = @_;
 
-    say "Game requires an initial $what";
-    my $val = prompt "Enter starting $what? ",
-              -integer => 'positive nonzero',
-              -style => 'bold';
+    say "\nGame requires an initial $what";
+    my $val = prompt "Enter starting $what: ",
+              -integer => 'positive nonzero';
 
     ## /grrrr because prompt returns a Contextual::Return::Value object!
     $self->$what($val * 1);
@@ -204,7 +205,20 @@ sub deal {
 sub play {
     my ( $self ) = @_;
 
-    while ( ! $self->quit() ) {
+    while ( ! $self->quit() and $self->num_decks() > 0 ) {
+        if ( $self->deck()->size() < 3 ) {
+            ## When there's less than 3 cards remaining, we can't re-deal.
+            ## If the player has elected to go through the deck more than
+            ## once, re-start with a new deck.
+            if ( $self->num_decks > 1 ) {
+                say "Re-shuffling deck...";
+                # starting over with a new deck is simpler than recovering
+                # the played cards:
+                $self->new_deck();
+            }
+            $self->dec_num_decks(1);
+        }
+
         $self->play_hand();
 
         my $quit;
@@ -232,6 +246,8 @@ sub play {
         $self->quit($quit);
     }
 
+    say 'Played through all decks - game over!' if ! $self->num_decks();
+        
     $self->emit_stats();
 }
 
@@ -248,7 +264,7 @@ sub play_hand {
 
     my $hand = $self->hand();
 
-    say "\n".$hand->print('utf8');
+    say "\n".$hand->as_string();
 
     my ( $pair_hi_or_lo, $ace_hi_or_lo );
 
@@ -277,15 +293,16 @@ sub play_hand {
 
     my $spread = $hand->spread();
 
-    say "The spread is $spread";
+    ## no need to tell the spread for pairs & consecutives:
+    say "\nThe spread is $spread" if $spread > 1;
 
     my $bet = $self->get_bet() or return 0;
 
-    sleep 2;  ## artificial delay before the "flip"
+    sleep 1;  ## artificial delay before the "flip"
 
     $self->deal(1);
 
-    say "\n".$hand->print('utf8');
+    say "\n".$hand->as_string();
 
     my $loss_factor = $hand->compute_result($pair_hi_or_lo);
 
@@ -362,7 +379,6 @@ sub get_bet {
         say 'You have chosen to fold.';
     }
 
-
     return $bet;
 }
 
@@ -374,23 +390,24 @@ sub emit_stats {
     say "";
     say sprintf('Your initial stake was $%.02f', $stats->{initial_stake});
     my $winnings = $self->stake() - $stats->{initial_stake};
-    say sprintf('You %s $%.02f (final stake: $%.02f)', $winnings >= 0 ? 'won' : 'lost',
-                                 abs($winnings),
-                                 $self->stake());
+    say sprintf('Your final   stake was $%.02f', $self->stake());
+    say sprintf('You %s:                $%.02f', $winnings >= 0 ? 'won' : 'lost',
+                                                 abs($winnings));
+    say '';
     say sprintf('You played %4s game%s', $stats->{games},
-                                         ($stats->{games} > 1 or $stats->{games} == 0
+                                         ($stats->{games} > 1 or $stats->{games} == 0)
                                              ? 's'
-                                             : ''));
+                                             : '');
     say sprintf('You won    %4s game%s', $stats->{won},
-                                         ($stats->{won} > 1 or $stats->{won} == 0
+                                         ($stats->{won} > 1 or $stats->{won} == 0)
                                              ? 's'
-                                             : ''));
+                                             : '');
     say sprintf('You lost   %4s game%s', $stats->{lost},
-                                         ($stats->{lost} > 1 or $stats->{lost} == 0
+                                         ($stats->{lost} > 1 or $stats->{lost} == 0)
                                              ? 's'
-                                             : ''));
-    say "";
-    say "Good bye!";
+                                             : '');
+    say '';
+    say 'Good bye!';
 }
 
 no Moose;
@@ -417,7 +434,6 @@ __PACKAGE__->meta->make_immutable;
 }
 
 1;
-
 __END__
 
 Flow:
