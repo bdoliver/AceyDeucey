@@ -14,12 +14,13 @@ use AceyDeucey;
 binmode(STDOUT, ":utf8");
 
 
-my ($pot, $stake, $hints, $help, $man);
+my ($pot, $stake, $decks, $hints, $help, $man);
 
 GetOptions(
-#    "hints"     => \$hints,
+#    "hints"     => \$hints, # may use this to display odds with each hand
     "stake=i"   => \$stake,
     "pot=i"     => \$pot,
+    "decks=i"   => \$decks,
     "help|?"    => \$help,
     "man"       => \$man,
 ) or pod2usage(2);
@@ -31,7 +32,7 @@ if ( $stake ) {
     $pot or die "--pot is required with --stake\n";
 }
 
-AceyDeucey->new(pot => $pot, stake => $stake)->play();
+AceyDeucey->new(pot => $pot, stake => $stake, decks => $decks)->play();
 
 __END__
 =head1 NAME
@@ -49,3 +50,15 @@ Starting size of the pot. Optional: if not set, you will be prompted.
 =item --stake NNN
 
 Starting size of your stake.  Optional: if not set, you will be prompted.
+
+=item --decks NNN
+
+Number of decks to play through (default is 1).
+
+This limits the length of a game.  A deck with be played through at least
+once.  This option may be used to set the length of the game by nominating
+how many times the deck will be played through. Of course, you may choose
+to quit at any time during the game.
+
+=back
+
