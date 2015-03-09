@@ -96,6 +96,7 @@ sub _init_stats {
 
     return $self->stats(
         {
+            decks => $self->num_decks(), # not sure if this will be useful...
             games => 0,
             won   => 0,
             lost  => 0,
@@ -111,7 +112,7 @@ sub _init_attrs {
     my $val = prompt "Enter starting $what: ",
               -integer => 'positive nonzero';
 
-    ## /grrrr because prompt returns a Contextual::Return::Value object!
+    ## ... because prompt() returns a Contextual::Return::Value object!
     $self->$what($val * 1);
 
     return 1;
@@ -143,7 +144,7 @@ sub new_deck {
 sub new_hand {
     my ( $self ) = @_;
 
-     $self->hand(AceyDeucey::Hand->new($self->game()));
+    $self->hand(AceyDeucey::Hand->new($self->game()));
 }
 
 sub _show {
@@ -154,7 +155,7 @@ sub _show {
 
     $msg ||= (( $what eq 'pot' ) ? "The" : "Your") . " $what is now: ";
 
-    say $msg . sprintf('$%.02f', shift->$what() || 0);
+    say $msg . sprintf('$%.02f', $self->$what() || 0);
 
     return 1;
 }
@@ -282,7 +283,7 @@ sub play_hand {
                             -keyletters;
             if ($ace_hi_or_lo eq 'h') {
                 say "First card: ace is high";
-                $self->hand->ace_high(1);
+                $self->hand->set_ace_high(1);
             }
             else {
                 say "First card: ace is low";
@@ -310,8 +311,8 @@ sub play_hand {
         # winning hand => no loss factor = win the bet amt from the pot.
         say sprintf('You won $%.02f!', $bet);
         $self->stats()->{won}++;
-        $self->take_from_pot($bet);
         $self->add_to_stake($bet);
+        $self->take_from_pot($bet);
     }
     else {
         # losing => pay loss_factor x bet to pot
