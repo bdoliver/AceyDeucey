@@ -83,13 +83,10 @@ sub as_string {
     my $hand_str = colored ['bright_black on_white'], ' Hand: ';
 
     for my $card ( @{ $self->cards() } ) {
-        my $card_str = $card->print('utf8');
-           $card_str =~ s/\s+//g;
-
            $hand_str .= colored ( $card->suit() =~ qr{[DH]}
                                   ? ['bright_red on_white']
                                   : ['bright_black on_white'],
-                                  "$card_str ");
+                                  $card->print('utf8'));
     }
 
     return $hand_str;
