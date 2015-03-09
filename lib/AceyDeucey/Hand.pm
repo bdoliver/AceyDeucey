@@ -6,11 +6,12 @@ use v5.10;
 use feature 'unicode_strings';
 
 use Carp;
+use Games::Cards;
 use List::Util qw(min max);
 use Moose;
 use MooseX::NonMoose;
-use Games::Cards;
-use IO::Prompter;
+use Term::ANSIColor;
+
 extends 'Games::Cards::Hand';
 
 around new => sub {
@@ -74,6 +75,24 @@ sub is_ace_high {
         carp "1st card is not an Ace!\n";
 
     return $self->cards()->[0]->value() == 14;
+}
+
+sub as_string {
+    my ( $self ) = @_;
+
+    my $hand_str = colored ['bright_black on_white'], ' Hand: ';
+
+    for my $card ( @{ $self->cards() } ) {
+        my $card_str = $card->print('utf8');
+           $card_str =~ s/\s+//g;
+
+           $hand_str .= colored ( $card->suit() =~ qr{[DH]}
+                                  ? ['bright_red on_white']
+                                  : ['bright_black on_white'],
+                                  "$card_str ");
+    }
+
+    return $hand_str;
 }
 
 sub compute_result {
