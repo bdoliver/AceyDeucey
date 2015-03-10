@@ -219,8 +219,9 @@ sub deal {
 
     $self->deck->give_cards( $self->hand(), $count );
 
-    ## face-down the middle card until we 'flip' it:
-    $self->hand->cards->[1]->face_down();
+    ## face-down the 'middle' card until we 'flip' it:
+    ## NB: the _last_ card is rendered as the 'middle':
+    $self->hand->cards->[2]->face_down();
 
     return 1;
 } ## end sub deal
@@ -323,7 +324,8 @@ sub play_hand {
 
     sleep 1;    ## artificial delay before the "flip"
 
-    $self->hand->cards->[1]->face_up();
+    ## Flip the middle card & work out the result:
+    $self->hand->cards->[2]->face_up();
 
     $self->_msg({msg => "\n\t".$hand->as_string()});
 

@@ -191,41 +191,45 @@ subtest 'set_ace_high() / is_ace_high()' => sub {
     );
 };
 
-$capture->start(); ## because compute_result() produces messages...
 subtest 'compute_result()' => sub {
     subtest 'standard spread - low card first' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(4H 10C 8S) ],
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is between posts!',
+                        },
               msg    => 'winner',
             },
             {
               cards  => [ qw(5H 8C 10D) ],
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is outside posts!',
+                        },
               msg    => 'loser',
             },
             {
-              cards  => [ qw(6D JS JC) ],
-              result => 2,
+              cards  => [ qw(6D JC JS) ],
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'loser - hit post (hi card)',
             },
             {
               cards  => [ qw(2C 9H 2D) ],
-              result => 2,
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'loser - hit post (lo card)',
             },
-            ## following hands: 2nd card low
-
         );
 
         for my $hand ( @hands ) {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result() == $hand->{result}
+            is_deeply($test_hand->compute_result(), $hand->{result},
                 => $hand->{msg}
             );
         }
@@ -234,35 +238,40 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(10C 4H 8S) ],
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is between posts!',
+                        },
               msg    => 'winner',
             },
             {
               cards  => [ qw(8C 5H 10D) ],
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is outside posts!',
+                        },
               msg    => 'loser',
             },
             {
               cards  => [ qw(JS 6D JC) ],
-              result => 2,
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'loser - hit post (hi card)',
             },
             {
-              cards  => [ qw(9H 2C 2D) ],
-              result => 2,
+              cards  => [ qw(9H 2D 2C) ],
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'loser - hit post (lo card)',
             },
-            ## following hands: 2nd card low
-
         );
 
         for my $hand ( @hands ) {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result() == $hand->{result}
+            is_deeply($test_hand->compute_result(), $hand->{result},
                 => $hand->{msg}
             );
         }
@@ -272,44 +281,60 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
-            { cards  => [ qw(5C 9H 9S) ],
-              result => 2,
+            { cards  => [ qw(5C 9S 9H) ],
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'hit standard post (low card first)',
             },
-            { cards  => [ qw(10S KS 10D) ],
-              result => 2,
+            { cards  => [ qw(KS 10S 10D) ],
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'hit standard post (high card first)',
             },
             {
-              cards  => [ qw(4C 5H 5D) ],
-              result => 2,
+              cards  => [ qw(4C 5D 5H) ],
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'seqn post hit (low card first)',
             },
             {
               cards  => [ qw(8C 7D 8H) ],
-              result => 2,
+              result => { loss => 2,
+                          msg  => 'Loser! 3rd card hit a post - bet is doubled!',
+                        },
               msg    => 'seqn post hit (high card first)',
             },
             {
-              cards  => [ qw(3C 3H 3D) ],
-              result => 3,
+              cards  => [ qw(3C 3D 3H) ],
+              result => { loss => 3,
+                          msg  => 'Loser! 3rd card hit a pair post - bet is tripled!',
+                        },
               msg    => 'pair post hit',
             },
             {
-              cards  => [ qw(AH AC AD) ],
-              result => 4,
+              cards  => [ qw(AH AD AC) ],
+              result => { loss => 4,
+                          msg  => 'Loser! 3rd card hit an ACE post - bet is quadrupled!',
+                        },
               msg    => 'ace pair post hit',
             },
-            ## following hands: 2nd card low
-
+            {
+              cards  => [ qw(AS 2D 2C) ],
+              result => { loss => 4,
+                          msg  => 'Loser! 3rd card hit an acey-deucey post - bet is quadrupled!',
+                        },
+              msg    => 'acey-deucey post hit',
+            },
         );
 
         for my $hand ( @hands ) {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result() == $hand->{result}
+            is_deeply($test_hand->compute_result(), $hand->{result},
                 => $hand->{msg}
             );
         }
@@ -319,16 +344,19 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(10C 10D KS) ],
               hi_lo  => 'h',
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is highest!',
+                        },
               msg    => 'winner',
             },
             {
               cards  => [ qw(9C 9H 5D) ],
               hi_lo  => 'h',
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is lowest!',
+                        },
               msg    => 'loser',
             },
         );
@@ -337,7 +365,7 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result($hand->{hi_lo}) == $hand->{result}
+            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result},
                 => $hand->{msg}
             );
         }
@@ -347,16 +375,19 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(10C 10D KS) ],
               hi_lo  => 'l',
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is highest!',
+                        },
               msg    => 'loser',
             },
             {
               cards  => [ qw(9C 9H 5D) ],
               hi_lo  => 'l',
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is lowest!',
+                        },
               msg    => 'winner',
             },
         );
@@ -365,7 +396,7 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result($hand->{hi_lo}) == $hand->{result}
+            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
                 => $hand->{msg}
             );
         }
@@ -375,16 +406,19 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(10C JD KS) ],
               hi_lo  => 'h',
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is highest!',
+                        },
               msg    => 'winner',
             },
             {
               cards  => [ qw(8C 9H 5D) ],
               hi_lo  => 'h',
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is lowest!',
+                        },
               msg    => 'loser',
             },
         );
@@ -393,7 +427,7 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result($hand->{hi_lo}) == $hand->{result}
+            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
                 => $hand->{msg}
             );
         }
@@ -403,16 +437,19 @@ subtest 'compute_result()' => sub {
         my $master_hand = _generate_master_hand($game);
 
         my @hands = (
-            ## following hands: 1st card is low
             { cards  => [ qw(10C JD KS) ],
               hi_lo  => 'l',
-              result => 1,
+              result => { loss => 1,
+                          msg  => 'Loser! 3rd card is highest!',
+                        },
               msg    => 'loser',
             },
             {
               cards  => [ qw(8C 9H 5D) ],
               hi_lo  => 'l',
-              result => 0,
+              result => { win => 1,
+                          msg => 'Winner! 3rd card is lowest!',
+                        },
               msg    => 'winner',
             },
         );
@@ -421,14 +458,14 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            ok($test_hand->compute_result($hand->{hi_lo}) == $hand->{result}
+            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
                 => $hand->{msg}
             );
         }
     };
-
 };
-$capture->stop();
+
+done_testing();
 
 ## A $deck object cannot give_a_card() to put a specific card into a
 ## test hand.  To work around this, we deal the entire unshuffled $deck
@@ -444,10 +481,3 @@ sub _generate_master_hand {
 
     return $hand;
 }
-
-
-
-
-
-done_testing();
-

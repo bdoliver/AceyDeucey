@@ -28,7 +28,7 @@ sub spread {
 
    my @cards = @{ $self->cards() };
 
-   return abs($cards[0]->value() - $cards[2]->value());
+   return abs($cards[0]->value() - $cards[1]->value());
 }
 
 sub is_pair {
@@ -44,7 +44,7 @@ sub is_pair_aces {
 
     my @cards = @{ $self->cards() };
 
-    return ( $cards[0]->name() eq 'A' and $cards[2]->name() eq 'A' );
+    return ( $cards[0]->name() eq 'A' and $cards[1]->name() eq 'A' );
 }
 
 sub ace_first {
@@ -56,7 +56,7 @@ sub acey_deucey {
 
     my @cards = @{ $self->cards() };
 
-    return ( $cards[0]->name() eq 'A' and $cards[2]->name() eq '2' );
+    return ( $cards[0]->name() eq 'A' and $cards[1]->name() eq '2' );
 }
 
 sub set_ace_high {
@@ -84,7 +84,10 @@ sub as_string {
 
     my $hand_str = colored ['bright_black on_white'], ' Hand: ';
 
-    for my $card ( @{ $self->cards() } ) {
+    ## we want to print the 3rd card between the 1st & 2nd
+    ## (because those are the posts)
+    for my $idx ( 0, 2, 1, ) {
+           my $card = $self->cards()->[$idx];
            $hand_str .= colored ( ($card->is_face_up() and $card->suit() =~ qr{[DH]})
                                   ? ['bright_red on_white']
                                   : ['bright_black on_white'],
@@ -99,9 +102,7 @@ sub compute_result {
 
     my $result = {};
 
-    ## The 3rd card (face down) is between the "posts"
-    ## which is why we read the order as 1, 3, 2:
-    my ( $first_val, $third_val, $second_val, ) =
+    my ( $first_val, $second_val, $third_val ) =
         map { $_->value() } @{ $self->cards() };
 
     ## Check for post hits first:
@@ -112,6 +113,10 @@ sub compute_result {
         ## - if post hit is an ace, penalty = quadrupled
         if ( $third_val == 1 and ( $self->is_pair() or $self->acey_deucey() ) ) {
             $result->{msg}  = 'Loser! 3rd card hit an ACE post - bet is quadrupled!';
+            $result->{loss} = 4;
+        }
+        elsif ( $third_val == 2 and $self->acey_deucey() ) {
+            $result->{msg}  = 'Loser! 3rd card hit an acey-deucey post - bet is quadrupled!';
             $result->{loss} = 4;
         }
         elsif ( $self->is_pair() ) {
