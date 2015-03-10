@@ -4,17 +4,14 @@ use strict;
 use warnings;
 
 use FindBin;
+use Test::Most;
+
 use lib "$FindBin::Bin/../lib";
 
 use AceyDeucey;
 
-use IO::Capture::Stdout;
-use Test::Most;
 
-my $capture = IO::Capture::Stdout->new();
-$capture->start();
-my $game = AceyDeucey->new({ pot => 300, stake => 200 });
-$capture->stop();
+my $game = AceyDeucey->new({stake => 200 });
 ok($game, q{generated new game});
 
 subtest 'spread()' => sub {
