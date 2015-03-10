@@ -103,6 +103,7 @@ sub _init_stats {
             games         => 0,
             won           => 0,
             lost          => 0,
+            folded        => 0,
             initial_stake => $self->stake(),
         }
     );
@@ -332,7 +333,7 @@ sub play_hand {
     my $result = $hand->compute_result($pair_hi_or_lo);
 
     $self->_msg({msg => "\n\t"
-                        . colored( $result->{win} 
+                        . colored( $result->{win}
                                    ? ['bold green']
                                    : ['bold red' ],
                                    "$result->{msg}\n")
@@ -412,6 +413,7 @@ sub get_bet {
     }
     else {
         $self->_msg({err => 'You have chosen to fold.'});
+        $self->stats->{folded}++;
     }
 
     return $bet;
@@ -451,6 +453,13 @@ sub emit_stats {
         ? 's'
         : ''
     );
+    say sprintf(
+        'You folded %4s game%s', $stats->{folded},
+        ( $stats->{folded} > 1 or $stats->{lost} == 0 )
+        ? 's'
+        : ''
+    ) if $stats->{folded};
+
     say '';
     say 'Good bye!';
 } ## end sub emit_stats
@@ -461,19 +470,3 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-Flow:
-    ante-up
-
-    deal 2x cards
-        if card no.1 is Ace - call high/low
-
-        consecutive cards - call high/low
-        pair - call high/low
-
-    flip card no. 3
-        1) inside = take from pot
-        2) hi or lo  = take from pot
-        3) hit seqn post (match either card) = pay double to pot
-        4) hit pair post = pay triple
-        5) hit ace post = pay quad
