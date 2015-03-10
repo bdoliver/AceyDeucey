@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
-use strict;
-use warnings;
+use strictures 2;
 
 use FindBin;
 use lib "$FindBin::Bin/../lib";
@@ -13,12 +12,11 @@ use AceyDeucey;
 
 binmode( STDOUT, ":encoding(UTF-8)" );
 
-my ( $pot, $stake, $decks, $hints, $help, $man );
+my ( $stake, $decks, $hints, $help, $man );
 
 GetOptions(
     # "hints"  => \$hints, # may use this to display odds with each hand
     "stake=i" => \$stake,
-    "pot=i"   => \$pot,
     "decks=i" => \$decks,
     "help|?"  => \$help,
     "man"     => \$man,
@@ -27,11 +25,54 @@ GetOptions(
 pod2usage(1) if $help;
 pod2usage( -verbose => 2 ) if $man;
 
-if ($stake) {
-    $pot or die "--pot is required with --stake\n";
-}
+AceyDeucey->new( stake => $stake, decks => $decks )->play();
 
-AceyDeucey->new( pot => $pot, stake => $stake, decks => $decks )->play();
+exit(0);
+
+### =================================================================
+### Monkey-patch Games::Cards::Card to add UTF-8 output
+{
+    no warnings qw(redefine);
+
+    package Games::Cards::Card;
+
+    sub suit {
+        my $suit   = shift->{"suit"};
+        my $length = shift;
+        my %utf8   = (
+            "Diamonds" => "\N{U+2666}",
+            "Hearts"   => "\N{U+2665}",
+            "Spades"   => "\N{U+2660}",
+            "Clubs"    => "\N{U+2663}",
+        );
+
+        my $long = $length && $length eq "long";
+        my $utf8 = $length && $length eq "utf8";
+        return $long ? $suit : $utf8 ? $utf8{$suit} : uc( substr( $suit, 0, 1 ) );
+    }    # end sub Games::Cards::Card::suit
+
+    sub print {
+        my $card   = shift;
+        my $length = shift;
+        my $long   = $length && $length eq "long";
+        my $utf8   = $length && $length eq "utf8";
+        my ( $name, $suit ) = ( $card->name($length), $card->suit($length) );
+        my $face_up = $card->{"face_up"};
+
+        $long
+          ? (
+              $face_up
+            ? $name . " of " . $suit
+            : "(Face down card)"
+          )
+          : (    # long
+            $face_up ? sprintf( "%3s ", $name . $suit )
+                     : ( $utf8  ? " \N{U+263B} "  # 'A' = light smiley face
+                                : "*** " )        # 'B' = dark smiley face
+          );
+
+    }    # end sub Card::print
+}
 
 __END__
 =head1 NAME

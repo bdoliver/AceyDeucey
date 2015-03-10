@@ -1,5 +1,7 @@
 package AceyDeucey::Hand;
 
+use strictures 2;
+
 use namespace::autoclean;
 
 use v5.10;
@@ -26,7 +28,7 @@ sub spread {
 
    my @cards = @{ $self->cards() };
 
-   return abs($cards[0]->value() - $cards[1]->value());
+   return abs($cards[0]->value() - $cards[2]->value());
 }
 
 sub is_pair {
@@ -42,7 +44,7 @@ sub is_pair_aces {
 
     my @cards = @{ $self->cards() };
 
-    return ( $cards[0]->name() eq 'A' and $cards[1]->name() eq 'A' );
+    return ( $cards[0]->name() eq 'A' and $cards[2]->name() eq 'A' );
 }
 
 sub ace_first {
@@ -54,7 +56,7 @@ sub acey_deucey {
 
     my @cards = @{ $self->cards() };
 
-    return ( $cards[0]->name() eq 'A' and $cards[1]->name() eq '2' );
+    return ( $cards[0]->name() eq 'A' and $cards[2]->name() eq '2' );
 }
 
 sub set_ace_high {
@@ -83,7 +85,7 @@ sub as_string {
     my $hand_str = colored ['bright_black on_white'], ' Hand: ';
 
     for my $card ( @{ $self->cards() } ) {
-           $hand_str .= colored ( $card->suit() =~ qr{[DH]}
+           $hand_str .= colored ( ($card->is_face_up() and $card->suit() =~ qr{[DH]})
                                   ? ['bright_red on_white']
                                   : ['bright_black on_white'],
                                   $card->print('utf8'));
@@ -95,9 +97,11 @@ sub as_string {
 sub compute_result {
     my ( $self, $pair_hi_or_lo ) = @_;
 
-    my $loss_factor = 0;
+    my $result = {};
 
-    my ( $first_val, $second_val, $third_val ) =
+    ## The 3rd card (face down) is between the "posts"
+    ## which is why we read the order as 1, 3, 2:
+    my ( $first_val, $third_val, $second_val, ) =
         map { $_->value() } @{ $self->cards() };
 
     ## Check for post hits first:
@@ -107,16 +111,16 @@ sub compute_result {
         ## - if hand is a pair, penalty = tripled
         ## - if post hit is an ace, penalty = quadrupled
         if ( $third_val == 1 and ( $self->is_pair() or $self->acey_deucey() ) ) {
-            say '3rd card hit an ACE post - bet is quadrupled!';
-            $loss_factor = 4;
+            $result->{msg}  = 'Loser! 3rd card hit an ACE post - bet is quadrupled!';
+            $result->{loss} = 4;
         }
         elsif ( $self->is_pair() ) {
-            say '3rd card hit a pair post - bet is tripled!';
-            $loss_factor = 3;
+            $result->{msg}  = 'Loser! 3rd card hit a pair post - bet is tripled!';
+            $result->{loss} = 3;
         }
         else {
-            say '3rd card hit a post - bet is doubled!';
-            $loss_factor = 2;
+            $result->{msg}  = 'Loser! 3rd card hit a post - bet is doubled!';
+            $result->{loss} = 2;
         }
     }
     ## pairs & consecutives: check whether hi or lo was called:
@@ -124,25 +128,25 @@ sub compute_result {
         if ( $pair_hi_or_lo eq 'h' ) {
             if ( $third_val > $first_val and $third_val > $second_val ) {
                 ## winner!
-                say "winner - 3rd card is highest!";
-                ;
+                $result->{msg} = 'Winner! 3rd card is highest!';
+                $result->{win} = 1;
             }
             else {
                 ## loser!
-                say "loser - 3rd card is lowest!";
-                $loss_factor = 1;
+                $result->{msg}  = 'Loser! 3rd card is lowest!';
+                $result->{loss} = 1;
             }
         }
         elsif ( $pair_hi_or_lo eq 'l' ) {
             if ( $third_val < $first_val and $third_val < $second_val ) {
                 ## winner!
-                say "winner - 3rd card is lowest!";
-                ;
+                $result->{msg} = 'Winner! 3rd card is lowest!';
+                $result->{win} = 1;
             }
             else {
                 ## loser!
-                $loss_factor = 1;
-                say "loser - 3rd card is highest!";
+                $result->{msg}  = 'Loser! 3rd card is highest!';
+                $result->{loss} = 1;
             }
         }
         else {
@@ -154,16 +158,17 @@ sub compute_result {
         if ( $third_val < max($first_val, $second_val) and
              $third_val > min($first_val, $second_val) ) {
              # winner!
-             say "winner - 3rd card is between posts!";
+             $result->{msg} = 'Winner! 3rd card is between posts!';
+             $result->{win} = 1;
         }
         else {
              # loser!
-             say "loser - 3rd card is outside posts!";
-             $loss_factor = 1;
+             $result->{msg}  = 'Loser! 3rd card is outside posts!';
+             $result->{loss} = 1;
         }
     }
 
-    return $loss_factor;
+    return $result;
 }
 
 no Moose;
