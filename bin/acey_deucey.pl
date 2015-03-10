@@ -46,7 +46,7 @@ exit(0);
         my $long = $length && $length eq "long";
         my $utf8 = $length && $length eq "utf8";
         return $long ? $suit : $utf8 ? $utf8{$suit} : uc( substr( $suit, 0, 1 ) );
-    }    # end sub Games::Cards::Card::suit
+    }   # end sub Games::Cards::Card::suit
 
     sub print {
         my $card   = shift;
@@ -68,7 +68,7 @@ exit(0);
                                 : "*** " )        # 'B' = dark smiley face
           );
 
-    }    # end sub Card::print
+    }   # end sub Card::print
 }
 
 __END__
