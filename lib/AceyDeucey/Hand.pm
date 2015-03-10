@@ -82,15 +82,15 @@ sub is_ace_high {
 sub as_string {
     my ( $self ) = @_;
 
-    my $hand_str = colored ['bright_black on_white'], ' Hand: ';
+    my $hand_str = colored ['black on_white'], ' Hand: ';
 
     ## we want to print the 3rd card between the 1st & 2nd
     ## (because those are the posts)
     for my $idx ( 0, 2, 1, ) {
            my $card = $self->cards()->[$idx];
            $hand_str .= colored ( ($card->is_face_up() and $card->suit() =~ qr{[DH]})
-                                  ? ['bright_red on_white']
-                                  : ['bright_black on_white'],
+                                  ? ['red on_white']
+                                  : ['black on_white'],
                                   $card->print('utf8'));
     }
 
