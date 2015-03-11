@@ -12,17 +12,23 @@ use AceyDeucey;
 
 binmode( STDOUT, ":encoding(UTF-8)" );
 
-my ( $stake, $decks, $hints );
+my ( $stake, $pot, $decks, $hints );
 
 GetOptions(
-    # "hints"  => \$hints, # may use this to display odds with each hand
+    "pot=i"   => \$pot,
     "stake=i" => \$stake,
     "decks=i" => \$decks,
+    "hints|H" => \$hints,
     "help|?"  => sub { pod2usage( -verbose => 1 ) },
     "man"     => sub { pod2usage( -verbose => 2 ) },
 ) or pod2usage(2);
 
-AceyDeucey->new( stake => $stake, decks => $decks )->play();
+AceyDeucey->new(
+    { stake => $stake,
+      pot   => $pot,
+      decks => $decks,
+      hints => $hints },
+)->play();
 
 exit(0);
 
@@ -90,6 +96,11 @@ acey_deucey.pl [--stake N] [--decks N] [--help|--man]
 
 Starting size of your stake.  Optional: if not set, you will be prompted.
 
+=item --pot NNN
+
+Optionally nominate a starting pot for the game (in which case, your aim
+is to eventually win the contents of the pot).
+
 =item --decks NNN
 
 Number of decks to play through (default is 1).
@@ -99,6 +110,11 @@ once.  This option may be used to set the length of the game by nominating
 how many times the deck will be played through. Of course, you may choose
 to quit at any time during the game.  eg. C<--decks 2> means one re-shuffle
 during the game; the deck is played through twice.
+
+=item --hints
+
+Optionally allow hints (in the form of messages regarding the odds of
+various things) to be displayed.
 
 =item --help
 
