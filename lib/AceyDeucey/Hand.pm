@@ -11,10 +11,21 @@ use Carp;
 use Games::Cards;
 use List::Util qw(min max);
 use Moose;
+use Moose::Util::TypeConstraints;
 use MooseX::NonMoose;
 use Term::ANSIColor;
 
 extends 'Games::Cards::Hand';
+
+subtype 'HiLo'
+    => as 'Str'
+    => where { $_ =~ qr{[hHlL]} }
+    => message { qq{ hi_or_lo() got '$_' (expected 'h' or 'l')} };
+
+has hi_or_lo => (
+    is      => 'rw',
+    isa     => 'HiLo',
+);
 
 around new => sub {
     my $orig = shift;
@@ -79,6 +90,14 @@ sub is_ace_high {
     return $self->cards()->[0]->value() == 14;
 }
 
+sub is_bet_low {
+    return shift->hi_or_lo() eq 'l';
+}
+
+sub is_bet_high {
+    return shift->hi_or_lo() eq 'h';
+}
+
 sub as_string {
     my ( $self ) = @_;
 
@@ -98,7 +117,7 @@ sub as_string {
 }
 
 sub compute_result {
-    my ( $self, $pair_hi_or_lo ) = @_;
+    my ( $self ) = @_;
 
     my $result = {};
 
@@ -130,7 +149,7 @@ sub compute_result {
     }
     ## pairs & consecutives: check whether hi or lo was called:
     elsif ( $self->is_consecutive() or $self->is_pair() ) {
-        if ( $pair_hi_or_lo eq 'h' ) {
+        if ( $self->is_bet_high() ) {
             if ( $third_val > $first_val and $third_val > $second_val ) {
                 ## winner!
                 $result->{msg} = 'Winner! 3rd card is highest!';
@@ -142,7 +161,7 @@ sub compute_result {
                 $result->{loss} = 1;
             }
         }
-        elsif ( $pair_hi_or_lo eq 'l' ) {
+        else {
             if ( $third_val < $first_val and $third_val < $second_val ) {
                 ## winner!
                 $result->{msg} = 'Winner! 3rd card is lowest!';
@@ -153,9 +172,6 @@ sub compute_result {
                 $result->{msg}  = 'Loser! 3rd card is highest!';
                 $result->{loss} = 1;
             }
-        }
-        else {
-            confess "compute_result() invalid pair_hi_or_low value '$pair_hi_or_lo'\n";
         }
     }
     ## 'standard' hand check:
@@ -174,6 +190,11 @@ sub compute_result {
     }
 
     return $result;
+}
+
+sub calc_odds {
+    my ( $self ) = @_;
+
 }
 
 no Moose;

@@ -14,6 +14,23 @@ use AceyDeucey;
 my $game = AceyDeucey->new({stake => 200 });
 ok($game, q{generated new game});
 
+subtest 'hi_lo' => sub {
+    my $master_hand = _generate_master_hand($game);
+
+    ok($master_hand->hi_or_lo('l')
+        => q{set bet low}
+    );
+
+    ok($master_hand->is_bet_low(), "bet is low");
+
+    ok($master_hand->hi_or_lo('h')
+        => q{set bet high}
+    );
+
+    ok($master_hand->is_bet_high(), "bet is high");
+
+};
+
 subtest 'spread()' => sub {
     my $master_hand = _generate_master_hand($game);
 
@@ -362,7 +379,9 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result},
+            $test_hand->hi_or_lo($hand->{hi_lo});
+
+            is_deeply($test_hand->compute_result(), $hand->{result},
                 => $hand->{msg}
             );
         }
@@ -393,7 +412,9 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
+            $test_hand->hi_or_lo($hand->{hi_lo});
+
+            is_deeply($test_hand->compute_result(), $hand->{result}
                 => $hand->{msg}
             );
         }
@@ -424,7 +445,9 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
+            $test_hand->hi_or_lo($hand->{hi_lo});
+
+            is_deeply($test_hand->compute_result(), $hand->{result}
                 => $hand->{msg}
             );
         }
@@ -455,7 +478,9 @@ subtest 'compute_result()' => sub {
             my $test_hand = $game->new_hand();
             map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
 
-            is_deeply($test_hand->compute_result($hand->{hi_lo}), $hand->{result}
+            $test_hand->hi_or_lo($hand->{hi_lo});
+
+            is_deeply($test_hand->compute_result(), $hand->{result}
                 => $hand->{msg}
             );
         }

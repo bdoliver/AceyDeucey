@@ -22,6 +22,10 @@ has game => (
     default  => sub { Games::Cards::Game->new(); },
     required => 1,
 );
+has hints => (
+    is      => 'rw',
+    default => 0,
+);
 has quit => (
     is      => 'rw',
     default => 0,
@@ -120,6 +124,10 @@ sub BUILD {
     }
 
     $self->_msg( {msg => 'Your starting stake:', amt => $self->stake()} );
+
+    if ( $self->pot() ) {
+        $self->_msg( {msg => 'The starting pot is:', amt => $self->pot()} );
+    }
 
     $self->_init_stats();
 
@@ -288,17 +296,20 @@ sub play_hand {
 
     $self->_msg({msg => "\n\t".$hand->as_string()});
 
-    my ( $pair_hi_or_lo, $ace_hi_or_lo );
+    my ( $ace_hi_or_lo );
 
     if ( $hand->is_pair() or $hand->is_consecutive() ) {
 #         if ( !$hand->is_pair_aces() and !$hand->acey_deucey() ) {
 
             # matched pair - call for hi / lo
-            $pair_hi_or_lo = prompt 'Pair or run: is next card (h)igh or (l)ow? ',
+            my $hi_or_lo = prompt 'Pair or run: is next card (h)igh or (l)ow? ',
                              -keyletters;
             $self->_msg({msg => 'You bet next card will be '
-                                . ( $pair_hi_or_lo eq 'h' ? 'higher' : 'lower' )
+                                . ( $hi_or_lo eq 'h' ? 'higher' : 'lower' )
             });
+
+            # gah! need to stringify the prompt result...
+            $self->hand->hi_or_lo($hi_or_lo.'');
 #         }
     }
     elsif ( $self->hand->ace_first() ) {
@@ -330,7 +341,7 @@ sub play_hand {
 
     $self->_msg({msg => "\n\t".$hand->as_string()});
 
-    my $result = $hand->compute_result($pair_hi_or_lo);
+    my $result = $hand->compute_result();
 
     $self->_msg({msg => "\n\t"
                         . colored( $result->{win}
@@ -382,15 +393,27 @@ sub get_bet {
     my $pot   = $self->pot();
     my $bet;
 
+    my $prompt  = "\nPlace your bet (amount, 0 to fold, '(p)ot' to bet the pot";
+       $prompt .= ", 'h' for hints";
+       $prompt .= "): ";
+
     BET: {
+
         my $val
-          = prompt "\nPlace your bet (amount, 0 to fold, or '(p)ot' to bet the pot): ";
+          = prompt $prompt;
 
         if ( $val and $val =~ qr{^p(?:ot)?$}i ) {
             $bet = $self->pot();
         }
         elsif ( $val and looks_like_number($val) ) {
             $bet = $val * 1;
+        }
+        elsif ( $val and $val =~ qr{^[hH]$} ) {
+        warn "*** would give hints!! ***\n";
+            my $hints = $self->hand->calc_odds();
+use Data::Dumper;
+say "Hints:", Dumper($hints);
+            redo BET;
         }
         else {
             $val ||= '';
