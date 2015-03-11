@@ -1,0 +1,31 @@
+Spread > 1
+   where x, y = posts
+
+   ( abs(y - x) - 1 ) * 4 / 50 * 100
+
+   eg. posts: 7D   9C   (winnable cards are the four 8s)
+       abs(7 - 9) - 1 = 1
+       1 * 4 / 50 = 2/25 = 0.08 = 8.00%
+
+   eg. posts: 2D   KS   (winnable cards 3-Q of all suits)
+       ( abs(2 - 13) - 1 ) * 4 / 50 * 100 = 80.00%
+
+
+Spread <= 1
+   high: 13 - max(posts) * 4 / 50 * 100
+   low:  min(posts) - 1 * 4 / 50 * 100
+
+   eg. posts: 8C 9D
+       high: ( 13 - 9 ) * 4 / 50 * 100 = 32.00%
+       low:  (  8 - 1 ) * 4 / 50 * 100 = 56.00%
+
+   eg. posts 5C 5D
+       high: ( 13 - 5 ) * 4 / 50 * 100 = 64.00%
+       low:  (  5 - 1 ) * 4 / 50 * 100 = 32.00%
+
+Post-hit:
+   non-pair posts: (3 + 3) / 50 * 100 = 12.00%
+       (3+3 because there are 3 of each post card remaining in the deck)
+
+   pair post: 2 / 50 * 100 = 4.00%
+       (because there are 2 matching post cards remaining in the deck)
