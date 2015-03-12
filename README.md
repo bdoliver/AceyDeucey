@@ -12,12 +12,18 @@ have at it!! :-)
 Requires at least perl v5.10
 
 ### Module dependencies:
-* Find::Bin
+* Carp
+* FindBin
 * Pod::Usage
 * Moose
+* Moose::Util::TypeConstraints;
 * MooseX::NonMoose
 * Games::Cards
 * IO::Prompter
+* List::Util
+* namespace::autoclean
+* Scalar::Util
+* strictures 2
 * Term::ANSIColor
 * Test::Most (only if you want to run the tests)
 
