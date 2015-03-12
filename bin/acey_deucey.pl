@@ -113,8 +113,8 @@ during the game; the deck is played through twice.
 
 =item --hints
 
-Optionally allow hints (in the form of messages regarding the odds of
-various things) to be displayed.
+Optionally allow hints to be displayed (in the form of messages showing the
+win / loss probabilities for the current hand).
 
 =item --help
 
@@ -190,7 +190,9 @@ Place your bet: enter the amount you wish to bet for this hand. If you
 think the chances of winning the hand are not good, you may bet zero -
 in which case you only lose your ante.  You may bet up to the value of
 your remaining stake or the pot, whichever is the lower.  As a convenience,
-you may enter C<p> to bet the pot.
+you may enter C<p> to bet the pot.  If the game was started with the
+C<--hints|-H> option, you may also enter 'h' here to display the win/loss
+probability for the current hand before you place your bet.
 
 =item 4
 
