@@ -192,9 +192,54 @@ sub compute_result {
     return $result;
 }
 
-sub calc_odds {
+sub calculate_odds {
     my ( $self ) = @_;
 
+    my $odds = {};
+
+    my ( $post1, $post2 ) = map { $_->value() } (@{ $self->cards() })[0,1];
+
+    ## Win odds:
+    ##  - normal spread
+    if ( $self->spread() > 1 ) {
+        $odds->{win} = ( abs($post1 - $post2) - 1 ) * 4 / 50 * 100;
+    }
+    ##  - must be pair or consecutive, so bet will be either high or low
+    elsif ( $self->is_bet_high() ) {
+        $odds->{win} = ( 13 - max($post1,$post2) ) * 4 / 50 * 100;
+    }
+    elsif ( $self->is_bet_low() ) {
+        $odds->{win} = ( min($post1,$post2) - 1 ) * 4 / 50 * 100;
+    }
+
+    ## Loss odds:
+    if ( $self->spread() > 1 ) {
+        my $outside_hi = ( 13 - max($post1,$post2) ) * 4 / 50 * 100;
+        my $outside_lo = ( min($post1,$post2) - 1 ) * 4 / 50 * 100;
+        $odds->{loss}->{outside_spread} = $outside_hi + $outside_lo;
+    }
+
+    if ( $self->is_pair() ) {
+        # pair post hit (ie. matching pair remaining in deck)
+        $odds->{loss}->{post_hit} = 2 / 50 * 100;
+    }
+    else {
+        # non-pair post hit (ie. 3 of each post remaining in deck)
+        $odds->{loss}->{post_hit} = (3 + 3) / 50 * 100;
+    }
+
+    # If hi or lo was bet (because pair or consecutive cards),
+    # then show loss odds:
+    if ( $self->hi_or_lo() ) {
+        if ( $self->is_bet_high() ) {
+            $odds->{loss}->{card_lo} = ( min($post1,$post2) - 1 ) * 4 / 50 * 100;
+        }
+        else {
+            $odds->{loss}->{card_hi} = ( 13 - max($post1,$post2) ) * 4 / 50 * 100;
+        }
+    }
+
+    return $odds;
 }
 
 no Moose;
