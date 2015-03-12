@@ -413,7 +413,7 @@ sub get_bet {
     my $bet;
 
     my $prompt  = "\nPlace your bet (amount, 0 to fold, '(p)ot' to bet the pot";
-       $prompt .= ", 'h' for hints";
+       $prompt .= ", 'h' for hints" if $self->hints();
        $prompt .= "): ";
 
     BET: {
@@ -427,7 +427,7 @@ sub get_bet {
         elsif ( $val and looks_like_number($val) ) {
             $bet = $val * 1;
         }
-        elsif ( $val and $val =~ qr{^[hH]$} ) {
+        elsif ( $val and $self->hints() and $val =~ qr{^[hH]$} ) {
             $self->_do_hints();
             redo BET;
         }
