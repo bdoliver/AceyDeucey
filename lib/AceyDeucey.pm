@@ -150,10 +150,33 @@ sub new_hand {
     $self->hand( AceyDeucey::Hand->new( $self->game() ) );
 } ## end sub new_hand
 
+sub _do_hints {
+    my ($self) = @_;
+
+    my $hints = $self->hand->calculate_odds();
+
+    $self->_msg({
+        msg => sprintf('Odds of winning this hand   : %2s%%',
+                       $hints->{win}),
+    }) if $hints->{win};
+
+    if ( $hints->{loss} ) {
+        $self->_msg({
+            msg => sprintf('Odds of being outside posts : %2s%%',
+                           $hints->{loss}->{outside_spread}),
+        }) if $hints->{loss}->{outside_spread};
+
+        $self->_msg({
+            msg => sprintf('Odds of hitting a post      : %2s%%',
+                           $hints->{loss}->{post_hit}),
+        }) if $hints->{loss}->{post_hit};
+    }
+}
+
+
 sub _msg {
     my ( $self, $args ) = @_;
 
-    my $what = $args->{what};
     my $msg  = $args->{msg};
     my $amt  = $args->{amt};
     my $err  = $args->{err};
@@ -299,29 +322,25 @@ sub play_hand {
     my ( $ace_hi_or_lo );
 
     if ( $hand->is_pair() or $hand->is_consecutive() ) {
-#         if ( !$hand->is_pair_aces() and !$hand->acey_deucey() ) {
+        # call for next card to be hi / lo
+        my $hi_or_lo = prompt 'Pair or run: is next card (h)igh or (l)ow? ',
+                       -keyletters;
+        $self->_msg({msg => 'You bet next card will be '
+                            . ( $hi_or_lo eq 'h' ? 'higher' : 'lower' )
+        });
 
-            # matched pair - call for hi / lo
-            my $hi_or_lo = prompt 'Pair or run: is next card (h)igh or (l)ow? ',
-                             -keyletters;
-            $self->_msg({msg => 'You bet next card will be '
-                                . ( $hi_or_lo eq 'h' ? 'higher' : 'lower' )
-            });
-
-            # gah! need to stringify the prompt result...
-            $self->hand->hi_or_lo($hi_or_lo.'');
-#         }
+        # gah! need to stringify the prompt result...
+        $self->hand->hi_or_lo($hi_or_lo.'');
     }
     elsif ( $self->hand->ace_first() ) {
         if ( !$hand->acey_deucey() ) {
-            $ace_hi_or_lo = prompt 'First card ace: (h)igh or (l)ow? ', -keyletters;
+            $ace_hi_or_lo = prompt 'First card is Ace: (h)igh or (l)ow? ', -keyletters;
             if ( $ace_hi_or_lo eq 'h' ) {
-                $self->_msg({msg => 'First card: ace is high'});
+                $self->_msg({msg => 'First card: Ace is high'});
                 $self->hand->set_ace_high(1);
             }
             else {
-                $self->_msg({msg => 'First card: ace is low'});
-
+                $self->_msg({msg => 'First card: Ace is low'});
                 # ace is low by default so no need to set.
             }
         }
@@ -409,10 +428,7 @@ sub get_bet {
             $bet = $val * 1;
         }
         elsif ( $val and $val =~ qr{^[hH]$} ) {
-        warn "*** would give hints!! ***\n";
-            my $hints = $self->hand->calc_odds();
-use Data::Dumper;
-say "Hints:", Dumper($hints);
+            $self->_do_hints();
             redo BET;
         }
         else {
