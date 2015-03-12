@@ -487,6 +487,68 @@ subtest 'compute_result()' => sub {
     };
 };
 
+subtest 'Calculate odds' => sub {
+    my $master_hand = _generate_master_hand($game);
+        my @hands = (
+            { cards  => [ qw(3C JD KS) ],
+              result => { win  => 56,
+                          loss => { outside_spread => 32,
+                                    post_hit       => 12,
+                          },
+                        },
+              msg    => 'odds on spread > 1',
+            },
+            { cards  => [ qw(3S 4D KD) ],
+              hi_lo  => 'h',
+              result => { win  => 72,
+                          loss => { card_lo  => 16,
+                                    post_hit => 12,
+                          },
+                        },
+              msg    => 'odds on seqn, bet card is high',
+           },
+           { cards  => [ qw(3H 4H KC) ],
+             hi_lo => 'l',
+             result => { win  => 16,
+                         loss => { card_hi  => 72,
+                                   post_hit => 12,
+                         },
+                        },
+              msg    => 'odds on seqn, bet card is low',
+            },
+            { cards  => [ qw(6S 6D AS) ],
+              hi_lo  => 'h',
+              result => { win  => 56,
+                          loss => { card_lo  => 40,
+                                    post_hit => 4,
+                          },
+                        },
+              msg    => 'odds on pair, bet card is high',
+           },
+           { cards  => [ qw(7H 7D AD) ],
+             hi_lo => 'l',
+             result => { win  => 48,
+                         loss => { card_hi  => 48,
+                                   post_hit => 4,
+                         },
+                        },
+              msg    => 'odds on pair, bet card is low',
+            },
+        );
+
+        for my $hand ( @hands ) {
+            my $test_hand = $game->new_hand();
+
+            $test_hand->hi_or_lo($hand->{hi_lo}) if $hand->{hi_lo};
+
+            map { $master_hand->give_a_card($test_hand, $_) } @{ $hand->{cards} };
+
+            is_deeply($test_hand->calculate_odds(), $hand->{result}
+                => $hand->{msg}
+            );
+        }
+
+};
 done_testing();
 
 ## A $deck object cannot give_a_card() to put a specific card into a
